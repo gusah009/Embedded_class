@@ -8,53 +8,93 @@
 #include "stm32f10x_adc.h"
 #include "stm32f10x_dma.h"
 
-#define ARRAYSIZE 8 * 4
+#define CHANNEL_NUM 8
+#define ARRAYSIZE CHANNEL_NUM * 4
 #define ADC1_DR ((uint32_t)0x4001244C)
+#define Cycles ADC_SampleTime_13Cycles5
+//#define Cycles ADC_SampleTime_41Cycles5
+
 volatile uint16_t ADC_values[ARRAYSIZE];
 static volatile uint32_t __status = 0;
-
-// 4000보다 크면 흔들림, 200보다 작으면 안흔들림
-
-uint16_t value = 100;
 
 /* function prototype */
 void RCC_Configure(void);
 void GPIO_Configure(void);
 void NVIC_Configure(void);
+void ADC_Configure(void);
+void DMA_Configure(void);
 
 //---------------------------------------------------------------------------------------------------
 
-// void RCC_Configure(void)
-// {
-//     /* Alternate Function IO clock enable */
-//     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOC, ENABLE); // ADC1, port C RCC ENABLE
-//     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-//     // 나머지 LCD에 필요한 포트들은 lcd.c에서 활성화 된다.
-// }
+void RCC_Configure(void)
+{
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1  | 
+                           RCC_APB2Periph_GPIOA | 
+                           RCC_APB2Periph_GPIOC | 
+                           RCC_APB2Periph_GPIOE, ENABLE);
+}
 
-// void GPIO_Configure(void)
-// {
-//     GPIO_InitTypeDef GPIO_InitStructure;
-//     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2;
-//     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-//     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN; // 아날로그 입력 설정
-//     GPIO_Init(GPIOC, &GPIO_InitStructure);        // C0포트 활성화, 조도센서를 PC0에 연결할 계획
-// }
-
-#define Cycles ADC_SampleTime_28Cycles5
-//#define Cycles ADC_SampleTime_41Cycles5
-
-void ADCInit(void)
+void GPIO_Configure(void)
 {
     //--Enable ADC1 and GPIOA--
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_GPIOA, ENABLE);
-    GPIO_InitTypeDef GPIO_InitStructure; //Variable used to setup the GPIO pins
-    //==Configure ADC pins (PA0 -> Channel 0 to PA7 -> Channel 7) as analog inputs==
-    GPIO_StructInit(&GPIO_InitStructure); // Reset init structure, if not it can cause issues...
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_InitTypeDef GPIOA_InitStructure,
+                     GPIOC_InitStructure,
+                     GPIOE_InitStructure; //Variable used to setup the GPIO pins
 
+    // 가속도 센서
+    GPIO_StructInit(&GPIOA_InitStructure);
+    GPIOA_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_4 | GPIO_Pin_6;
+    GPIOA_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIOA_InitStructure);
+
+    // 수위 센서
+    GPIO_StructInit(&GPIOC_InitStructure);
+    GPIOC_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIOC_InitStructure);
+    
+    // 온습도 센서
+    GPIO_StructInit(&GPIOC_InitStructure);
+    GPIOC_InitStructure.GPIO_Pin = GPIO_Pin_1;
+    GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIOC_InitStructure);
+    
+    // 토양습도 센서
+    GPIO_StructInit(&GPIOC_InitStructure);
+    GPIOC_InitStructure.GPIO_Pin = GPIO_Pin_3;
+    GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIOC_InitStructure);
+    
+    // 진동 센서
+    GPIO_StructInit(&GPIOC_InitStructure);
+    GPIOC_InitStructure.GPIO_Pin = GPIO_Pin_4;
+    GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIOC_InitStructure);
+    
+    // // 모터
+    // GPIO_StructInit(&GPIOE_InitStructure);
+    // GPIOE_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    // GPIOE_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    // GPIO_Init(GPIOA, &GPIOE_InitStructure);
+
+    /* UART2 pin setting - Bluetooth 모듈 */
+    //TX a2
+    GPIO_StructInit(&GPIOA_InitStructure);
+    GPIOA_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    GPIOA_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIOA_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_Init(GPIOA, &GPIOA_InitStructure); 
+   
+    //RX a3
+    GPIO_StructInit(&GPIOA_InitStructure);
+    GPIOA_InitStructure.GPIO_Pin = GPIO_Pin_3;
+    GPIOA_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIOA_InitStructure.GPIO_Mode = (GPIO_Mode_IPD) | (GPIO_Mode_IPU);
+    GPIO_Init(GPIOA, &GPIOA_InitStructure);
+}
+
+void ADC_Configure(void)
+{
     ADC_InitTypeDef ADC_InitStructure;
     //ADC1 configuration
 
@@ -67,21 +107,21 @@ void ADCInit(void)
     ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
     //right 12-bit data alignment in ADC data register
     ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-    //8 channels conversion
-    ADC_InitStructure.ADC_NbrOfChannel = 8;
+    //custom channels conversion
+    ADC_InitStructure.ADC_NbrOfChannel = CHANNEL_NUM;
     //load structure values to control and status registers
     ADC_Init(ADC1, &ADC_InitStructure);
     //wake up temperature sensor
     //ADC_TempSensorVrefintCmd(ENABLE);
     //configure each channel
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 2, Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_2, 3, Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_3, 4, Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 5, Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 6, Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_6, 7, Cycles);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_7, 8, Cycles);
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_0,  1, Cycles); // A0
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_4,  2, Cycles); // A4
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_6,  3, Cycles); // A6
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 4, Cycles); // PC0
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 5, Cycles); // PC1
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_13, 6, Cycles); // PC3
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_14, 7, Cycles); // PC4
+    // ADC_RegularChannelConfig(ADC1, ADC_Channel_7,  8, Cycles); // 모터
     //Enable ADC1
     ADC_Cmd(ADC1, ENABLE);
     //enable DMA for ADC
@@ -98,10 +138,9 @@ void ADCInit(void)
         ;
 }
 
-void DMAInit(void)
+void DMA_Configure(void)
 {
     DMA_InitTypeDef DMA_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
     //enable DMA1 clock
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
     //create DMA structure
@@ -132,13 +171,6 @@ void DMAInit(void)
     // Enable DMA1 Channel Transfer Complete interrupt
     DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
     DMA_Cmd(DMA1_Channel1, ENABLE); //Enable the DMA1 - Channel1
-
-    //Enable DMA1 channel IRQ Channel */
-    NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
 }
 
 void DMA1_Channel1_IRQHandler(void)
@@ -152,7 +184,7 @@ void DMA1_Channel1_IRQHandler(void)
 }
 
 int adc_view_flag = 1;
-void dma_test_adc8ch(void)
+void dma_test_adc_CHANNEL_NUM(void)
 {
     if (!__status)
         return;
@@ -161,86 +193,38 @@ void dma_test_adc8ch(void)
     ADC_SoftwareStartConvCmd(ADC1, DISABLE);
     if (adc_view_flag)
     {
-        for (index = 0; index < 8; index++)
-        {
-            printf("%d ADC value on ch%d = %d ,%d\r\n",
-                   __status, index, (uint16_t)((ADC_values[index] + ADC_values[index + 8] + ADC_values[index + 16] + ADC_values[index + 24]) / 4), ADC_values[index]);
-        }
+        // for (index = 0; index < CHANNEL_NUM; index++)
+        // {
+        //     printf("%d ADC value on ch%d = %d ,%d\r\n",
+        //            __status, index + 1, (uint16_t)((ADC_values[index] + ADC_values[index + CHANNEL_NUM] + ADC_values[index + CHANNEL_NUM * 2] + ADC_values[index + CHANNEL_NUM * 3]) / 4), ADC_values[index]);
+        // }
+        // ADC_values[0] - 3400이 250 이상일 때 유지 아니면 넘어짐
+        printf("%d ADC value on ch%d = %d ,%d\r\n",
+                   __status, 0 + 1, (uint16_t)((ADC_values[0] + ADC_values[0 + CHANNEL_NUM] + ADC_values[0 + CHANNEL_NUM * 2] + ADC_values[0 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[0]);
+        printf("%d ADC value on ch%d = %d ,%d\r\n",
+                   __status, 1 + 1, (uint16_t)((ADC_values[1] + ADC_values[1 + CHANNEL_NUM] + ADC_values[1 + CHANNEL_NUM * 2] + ADC_values[1 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[1]);
+        printf("%d ADC value on ch%d = %d ,%d\r\n",
+                   __status, 2 + 1, (uint16_t)((ADC_values[2] + ADC_values[2 + CHANNEL_NUM] + ADC_values[2 + CHANNEL_NUM * 2] + ADC_values[2 + CHANNEL_NUM * 3]) / 4) - 1600, ADC_values[2]);
         printf("=========================\n\r");
     }
     __status = 0;
     ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 }
 
-// void ADC1_Configure(void)
-// {
-//     // Analog to Digital Converter
-//     ADC_InitTypeDef ADC_InitStruct;
-
-//     //ADC_StructInit(&ADC_InitStruct);
-//     ADC_InitStruct.ADC_Mode = ADC_Mode_Independent;                  // slave-master가 없는 독립 ADC
-//     ADC_InitStruct.ADC_ScanConvMode = DISABLE;                       // 단일채널이므로 비활성화
-//     ADC_InitStruct.ADC_ContinuousConvMode = ENABLE;                  // 한 번의 트리거로 한 채널의 샘플링 시행
-//     ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None; // 외부 입력핀에 의한 트리거 비활성화
-//     ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right;              // Default
-//     ADC_InitStruct.ADC_NbrOfChannel = 1;                             // 채널은 하나
-
-//     ADC_Init(ADC1, &ADC_InitStruct); // 위 설정을 ADC1에 적용
-
-//     ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_28Cycles5); // 채널 우선순위 설정, 10채널 단독사용
-
-//     // ADC_ITConfig(ADC1,ADC_IT_EOC,ENABLE); // 무분별한 핸들러 호출 방지를 위해 주석처리
-
-//     ADC_Cmd(ADC1, ENABLE); // ADC1 활성화
-
-//     //Calibration reset & start
-//     ADC_ResetCalibration(ADC1);
-
-//     while (ADC_GetResetCalibrationStatus(ADC1))
-//         ;
-
-//     ADC_StartCalibration(ADC1);
-
-//     while (ADC_GetCalibrationStatus(ADC1))
-//         ;
-
-//     ADC_SoftwareStartConvCmd(ADC1, ENABLE);
-// }
-
-// void ADC_Configure(void)
-// {
-//     ADC1_Configure();
-//     ADC2_Configure();
-// }
-
-// void NVIC_Configure(void)
-// {
-
-//     NVIC_InitTypeDef NVIC_InitStructure;
-
-//     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
-
-//     NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn; // ADC IRQ 인터럽트 활성화
-//     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-//     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-//     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//     NVIC_Init(&NVIC_InitStructure);
-// }
-
-// void ADC1_2_IRQHandler(void)
-// {
-//     // printf("Handle\n");
-//     if (ADC_GetITStatus(ADC1, ADC_IT_EOC) != RESET)
-//     {                                         // End Of Conversion, ADC변환이 끝났을때,
-//         value = ADC_GetConversionValue(ADC1); // value에 조도센서 값 입력
-//         printf("%d\n", value);
-//         ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
-//     }
-// }
+void NVIC_Configure(void)
+{
+    NVIC_InitTypeDef NVIC_InitStructure;
+    //Enable DMA1 channel IRQ Channel */
+    NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+}
 
 void delay()
 {
-    for (int i = 0; i < 1000000; i++)
+    for (int i = 0; i < 10000000; i++)
     {
         continue;
     }
@@ -248,22 +232,19 @@ void delay()
 
 int main(void)
 {
-
     SystemInit();
-    // RCC_Configure();
-    // GPIO_Configure();
-    // ADC_Configure();
-    // NVIC_Configure();
+    RCC_Configure();
+    GPIO_Configure();
+    NVIC_Configure();
 
-    ADCInit();
-      DMAInit();
+    ADC_Configure();
+    DMA_Configure();
     //-----------------
 
     ADC_SoftwareStartConvCmd(ADC1, ENABLE);
-    // ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE); // ADC 변환이 끝났을때 인터럽트 발생
     while (1)
     {
-        dma_test_adc8ch();
+        dma_test_adc_CHANNEL_NUM();
         delay();
     }
     return 0;
