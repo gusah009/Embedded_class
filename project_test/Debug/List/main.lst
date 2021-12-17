@@ -1,0 +1,143 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V8.22.1.15669/W32 for ARM       13/Sep/2021  21:54:43
+# Copyright 1999-2018 IAR Systems AB.
+#
+#    Cpu mode     =  thumb
+#    Endian       =  little
+#    Source file  =  C:\Users\pnu2\Desktop\project_test\user\main.c
+#    Command line =  
+#        -f C:\Users\pnu2\AppData\Local\Temp\EW4B8E.tmp
+#        (C:\Users\pnu2\Desktop\project_test\user\main.c -D
+#        USE_STDPERIPH_DRIVER -D STM32F10X_CL -lC
+#        C:\Users\pnu2\Desktop\project_test\Debug\List -o
+#        C:\Users\pnu2\Desktop\project_test\Debug\Obj --no_cse --no_unroll
+#        --no_inline --no_code_motion --no_tbaa --no_clustering --no_scheduling
+#        --debug --endian=little --cpu=Cortex-M3 -e --fpu=None --dlib_config
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        8.0\arm\INC\c\DLib_Config_Normal.h" -I
+#        C:\Users\pnu2\Desktop\project_test\libraries\CMSIS\DeviceSupport\ -I
+#        C:\Users\pnu2\Desktop\project_test\libraries\CMSIS\DeviceSupport\Startup\
+#        -I
+#        C:\Users\pnu2\Desktop\project_test\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\
+#        -I
+#        C:\Users\pnu2\Desktop\project_test\libraries\STM32F10x_StdPeriph_Driver_v3.5\src\
+#        -I C:\Users\pnu2\Desktop\project_test\user\ -I
+#        C:\Users\pnu2\Desktop\project_test\user\inc\ -Ol -I "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Core\Include\" -I
+#        "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+#        8.0\arm\CMSIS\DSP\Include\")
+#    Locale       =  C
+#    List file    =  C:\Users\pnu2\Desktop\project_test\Debug\List\main.lst
+#    Object file  =  C:\Users\pnu2\Desktop\project_test\Debug\Obj\main.o
+#
+###############################################################################
+
+C:\Users\pnu2\Desktop\project_test\user\main.c
+      1          #include "stm32f10x.h"
+
+   \                                 In section .text, align 4, keep-with-next
+      2          int main(void)
+      3          {
+      4            *((volatile unsigned int *)0x40021018) |= 0x28;
+   \                     main: (+1)
+   \   00000000   0x481F             LDR.N    R0,??main_0      ;; 0x40021018
+   \   00000002   0x6800             LDR      R0,[R0, #+0]
+   \   00000004   0xF050 0x0028      ORRS     R0,R0,#0x28
+   \   00000008   0x491D             LDR.N    R1,??main_0      ;; 0x40021018
+   \   0000000A   0x6008             STR      R0,[R1, #+0]
+      5            *((volatile unsigned int *)0x40010c04) &= 0xfffffff0; // port b
+   \   0000000C   0x481D             LDR.N    R0,??main_0+0x4  ;; 0x40010c04
+   \   0000000E   0x6800             LDR      R0,[R0, #+0]
+   \   00000010   0x0900             LSRS     R0,R0,#+4
+   \   00000012   0x0100             LSLS     R0,R0,#+4
+   \   00000014   0x491B             LDR.N    R1,??main_0+0x4  ;; 0x40010c04
+   \   00000016   0x6008             STR      R0,[R1, #+0]
+      6            *((volatile unsigned int *)0x40010c04) |= 0x8; // port b
+   \   00000018   0x481A             LDR.N    R0,??main_0+0x4  ;; 0x40010c04
+   \   0000001A   0x6800             LDR      R0,[R0, #+0]
+   \   0000001C   0xF050 0x0008      ORRS     R0,R0,#0x8
+   \   00000020   0x4918             LDR.N    R1,??main_0+0x4  ;; 0x40010c04
+   \   00000022   0x6008             STR      R0,[R1, #+0]
+      7            
+      8            *((volatile unsigned int *)0x40011000) &= 0xff0000ff; // port c
+   \   00000024   0x4818             LDR.N    R0,??main_0+0x8  ;; 0x40011000
+   \   00000026   0x6800             LDR      R0,[R0, #+0]
+   \   00000028   0xF36F 0x2017      BFC      R0,#+8,#+16
+   \   0000002C   0x4916             LDR.N    R1,??main_0+0x8  ;; 0x40011000
+   \   0000002E   0x6008             STR      R0,[R1, #+0]
+      9            *((volatile unsigned int *)0x40011000) |= 0x00888800; // port c
+   \   00000030   0x4815             LDR.N    R0,??main_0+0x8  ;; 0x40011000
+   \   00000032   0x6800             LDR      R0,[R0, #+0]
+   \   00000034   0xF440 0x0008      ORR      R0,R0,#0x880000
+   \   00000038   0xF450 0x4008      ORRS     R0,R0,#0x8800
+   \   0000003C   0x4912             LDR.N    R1,??main_0+0x8  ;; 0x40011000
+   \   0000003E   0x6008             STR      R0,[R1, #+0]
+     10            
+     11            *((volatile unsigned int *)0x40011400) &= 0x0ff000ff; // port d
+   \   00000040   0x4812             LDR.N    R0,??main_0+0xC  ;; 0x40011400
+   \   00000042   0x6801             LDR      R1,[R0, #+0]
+   \   00000044   0x4812             LDR.N    R0,??main_0+0x10  ;; 0xff000ff
+   \   00000046   0x4001             ANDS     R1,R0,R1
+   \   00000048   0x4810             LDR.N    R0,??main_0+0xC  ;; 0x40011400
+   \   0000004A   0x6001             STR      R1,[R0, #+0]
+     12            *((volatile unsigned int *)0x40011400) |= 0x30033300; //port D output
+   \   0000004C   0x480F             LDR.N    R0,??main_0+0xC  ;; 0x40011400
+   \   0000004E   0x6801             LDR      R1,[R0, #+0]
+   \   00000050   0x4810             LDR.N    R0,??main_0+0x14  ;; 0x30033300
+   \   00000052   0x4301             ORRS     R1,R0,R1
+   \   00000054   0x480D             LDR.N    R0,??main_0+0xC  ;; 0x40011400
+   \   00000056   0x6001             STR      R1,[R0, #+0]
+     13            
+     14            *((volatile unsigned int *)0x40010c14) |= 0x00000100; // port b8
+   \   00000058   0x480F             LDR.N    R0,??main_0+0x18  ;; 0x40010c14
+   \   0000005A   0x6800             LDR      R0,[R0, #+0]
+   \   0000005C   0xF450 0x7080      ORRS     R0,R0,#0x100
+   \   00000060   0x490D             LDR.N    R1,??main_0+0x18  ;; 0x40010c14
+   \   00000062   0x6008             STR      R0,[R1, #+0]
+     15            *((volatile unsigned int *)0x40011010) |= 0x0000003c; // port c 2 3 4 5
+   \   00000064   0x480D             LDR.N    R0,??main_0+0x1C  ;; 0x40011010
+   \   00000066   0x6800             LDR      R0,[R0, #+0]
+   \   00000068   0xF050 0x003C      ORRS     R0,R0,#0x3C
+   \   0000006C   0x490B             LDR.N    R1,??main_0+0x1C  ;; 0x40011010
+   \   0000006E   0x6008             STR      R0,[R1, #+0]
+     16            *((volatile unsigned int *)0x40011410) |= 0x0000009c; // port d 2 3 4 7
+   \   00000070   0x480B             LDR.N    R0,??main_0+0x20  ;; 0x40011410
+   \   00000072   0x6800             LDR      R0,[R0, #+0]
+   \   00000074   0xF050 0x009C      ORRS     R0,R0,#0x9C
+   \   00000078   0x4909             LDR.N    R1,??main_0+0x20  ;; 0x40011410
+   \   0000007A   0x6008             STR      R0,[R1, #+0]
+     17          }
+   \   0000007C   0x2000             MOVS     R0,#+0
+   \   0000007E   0x4770             BX       LR               ;; return
+   \                     ??main_0:
+   \   00000080   0x40021018         DC32     0x40021018
+   \   00000084   0x40010C04         DC32     0x40010c04
+   \   00000088   0x40011000         DC32     0x40011000
+   \   0000008C   0x40011400         DC32     0x40011400
+   \   00000090   0x0FF000FF         DC32     0xff000ff
+   \   00000094   0x30033300         DC32     0x30033300
+   \   00000098   0x40010C14         DC32     0x40010c14
+   \   0000009C   0x40011010         DC32     0x40011010
+   \   000000A0   0x40011410         DC32     0x40011410
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+       0   main
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+     164  main
+
+ 
+ 164 bytes in section .text
+ 
+ 164 bytes of CODE memory
+
+Errors: none
+Warnings: none
