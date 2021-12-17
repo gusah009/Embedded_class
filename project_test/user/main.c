@@ -7,6 +7,9 @@
 #include "stm32f10x_usart.h"
 #include "stm32f10x_adc.h"
 #include "stm32f10x_dma.h"
+// #include "font.h"
+#include "lcd.h"
+// #include "lcd.c"
 
 #define CHANNEL_NUM 8
 #define ARRAYSIZE CHANNEL_NUM * 4
@@ -16,6 +19,8 @@
 
 volatile uint16_t ADC_values[ARRAYSIZE];
 static volatile uint32_t __status = 0;
+
+// 4000보다 크면 흔들림, 200보다 작으면 안흔들림
 
 /* function prototype */
 void RCC_Configure(void);
@@ -199,12 +204,19 @@ void dma_test_adc_CHANNEL_NUM(void)
         //            __status, index + 1, (uint16_t)((ADC_values[index] + ADC_values[index + CHANNEL_NUM] + ADC_values[index + CHANNEL_NUM * 2] + ADC_values[index + CHANNEL_NUM * 3]) / 4), ADC_values[index]);
         // }
         // ADC_values[0] - 3400이 250 이상일 때 유지 아니면 넘어짐
+        // printf("%d ADC value on ch%d = %d ,%d\r\n",
+        //            __status, 0 + 1, (uint16_t)((ADC_values[0] + ADC_values[0 + CHANNEL_NUM] + ADC_values[0 + CHANNEL_NUM * 2] + ADC_values[0 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[0]);
+        // printf("%d ADC value on ch%d = %d ,%d\r\n",
+        //            __status, 1 + 1, (uint16_t)((ADC_values[1] + ADC_values[1 + CHANNEL_NUM] + ADC_values[1 + CHANNEL_NUM * 2] + ADC_values[1 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[1]);
+        // printf("%d ADC value on ch%d = %d ,%d\r\n",
+        //            __status, 2 + 1, (uint16_t)((ADC_values[2] + ADC_values[2 + CHANNEL_NUM] + ADC_values[2 + CHANNEL_NUM * 2] + ADC_values[2 + CHANNEL_NUM * 3]) / 4) - 1600, ADC_values[2]);
+        
+        // printf("%d ADC value on ch%d = %d ,%d\r\n",
+        //            __status, 3 + 1, (uint16_t)((ADC_values[3] + ADC_values[3 + CHANNEL_NUM] + ADC_values[3 + CHANNEL_NUM * 2] + ADC_values[3 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[3]);
+        // printf("=========================\n\r");
+        
         printf("%d ADC value on ch%d = %d ,%d\r\n",
-                   __status, 0 + 1, (uint16_t)((ADC_values[0] + ADC_values[0 + CHANNEL_NUM] + ADC_values[0 + CHANNEL_NUM * 2] + ADC_values[0 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[0]);
-        printf("%d ADC value on ch%d = %d ,%d\r\n",
-                   __status, 1 + 1, (uint16_t)((ADC_values[1] + ADC_values[1 + CHANNEL_NUM] + ADC_values[1 + CHANNEL_NUM * 2] + ADC_values[1 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[1]);
-        printf("%d ADC value on ch%d = %d ,%d\r\n",
-                   __status, 2 + 1, (uint16_t)((ADC_values[2] + ADC_values[2 + CHANNEL_NUM] + ADC_values[2 + CHANNEL_NUM * 2] + ADC_values[2 + CHANNEL_NUM * 3]) / 4) - 1600, ADC_values[2]);
+                   __status, 4 + 1, (uint16_t)((ADC_values[4] + ADC_values[4 + CHANNEL_NUM] + ADC_values[4 + CHANNEL_NUM * 2] + ADC_values[4 + CHANNEL_NUM * 3]) / 4), ADC_values[4]);
         printf("=========================\n\r");
     }
     __status = 0;
@@ -237,13 +249,23 @@ int main(void)
     GPIO_Configure();
     NVIC_Configure();
 
+    // Sensor
     ADC_Configure();
     DMA_Configure();
+
+    // LCD
+    LCD_Init();            // LCD 초기화
+    LCD_Clear(WHITE);      // LCD 배경 초기화
     //-----------------
 
     ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+    LCD_ShowString(40, 10, "MON_Team02", MAGENTA, WHITE); // 팀명 출력
+    LCD_ShowString(90, 50, "OFF", RED, WHITE);            // 디폴트로 OFF
+    LCD_DrawRectangle(40, 80, 80, 120);                   // 사각형 출력
+    LCD_ShowString(60, 100, "Button", MAGENTA, WHITE);    // "Button" 글자 출력
     while (1)
     {
+        //  LCD_ShowNum(40, 100, value, 4, BLUE, WHITE);
         dma_test_adc_CHANNEL_NUM();
         delay();
     }
