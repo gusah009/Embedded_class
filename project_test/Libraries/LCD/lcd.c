@@ -622,3 +622,40 @@ void LCD_DrawPicture(u16 StartX, u16 StartY, u16 Xend, u16 Yend, u8 *pic)
 
 	LCD_WindowMax(0, 0, 240, 320);
 }
+
+
+#define FACEX 120
+#define FACEY 120
+
+void LCD_DrawHead(){
+	LCD_DrawCircle(FACEX,FACEY,40);
+}
+void LCD_DrawEyes(){
+	LCD_DrawCircle(FACEX-10,FACEY-10,5);
+	LCD_DrawCircle(FACEX+10,FACEY-10,5);
+}
+
+void LCD_Frown(){
+	
+	LCD_DrawHead();
+	
+	LCD_DrawLine(FACEX-15,FACEY-10,FACEX-5,FACEY-10); // frown eyes
+	LCD_DrawLine(FACEX+5,FACEY-10,FACEX+15,FACEY-10);
+
+	LCD_DrawLine(FACEX-20,FACEY+10,FACEX+20,FACEY+10); // frown flat mouth
+}
+void LCD_Smile(){
+
+	LCD_DrawHead();
+	LCD_DrawEyes();
+	
+	LCD_DrawLine(FACEX-30,FACEY+10,FACEX-10,FACEY+20); // smile mouth
+	LCD_DrawLine(FACEX-10,FACEY+20,FACEX+10,FACEY+20);
+}
+void LCD_Sad(){
+
+	LCD_DrawHead();
+	LCD_DrawEyes();
+	
+	LCD_DrawLine(FACEX-20,FACEY+10,FACEX+20,FACEY+10); // sad flat mouth
+}
