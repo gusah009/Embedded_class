@@ -40,11 +40,11 @@ void stopPump(){
 }
 
 uint8_t checkMoisture(uint16_t moisture){
-    printf("Moist : %d\n",moisture);
+    // printf("Moist : %d\n",moisture);
 
-    if(moisture < 1000/*임시 토양 습도*/){
+    if(moisture > 3000/*임시 토양 습도*/){
         startPump(); // 펌프모터 작동
-        SaveLog(0,0); // 토양습도 기록
+        // SaveLog(0,0); // 토양습도 기록
     }
     else{
         stopPump(); // 모터 중지
@@ -52,9 +52,9 @@ uint8_t checkMoisture(uint16_t moisture){
 }
 
 uint8_t checkVibration(uint16_t vibration){
-    printf("Vib : %d\n",vibration);
+    // printf("Vib : %d\n",vibration);
 
-    if(vibration > 3000/*임시진동기준치*/){
+    if(vibration > 4000/*임시진동기준치*/){
         return 1;
     }
     return 0;
@@ -63,11 +63,12 @@ uint8_t checkVibration(uint16_t vibration){
 uint8_t checkTemperature(uint16_t temperature){
 
     uint16_t calcedTemp = temperature; /* 계산된 온도 입력*/
-    printf("temp : %d\n",calcedTemp);
+    // printf("temp : %d\n",calcedTemp);
 
-    if(20/*임시최소온도*/ <= calcedTemp
-        && calcedTemp <= 30/*임시최대온도*/ ){
-            return 0;
+    // if(20/*임시최소온도*/ <= calcedTemp
+    //     && calcedTemp <= 30/*임시최대온도*/ ){
+    if(450 >= calcedTemp){
+        return 0;
     }
     return 1;
 }
@@ -77,19 +78,22 @@ void getFace(SensorVal sensorValue){
     uint16_t temperature = sensorValue.temperature;
 
     if(checkVibration(vibration)){ // 진동 발생여부 확인
-        SaveLog(0,1); // 진동 감지 로그 남기기
+        // SaveLog(0,1); // 진동 감지 로그 남기기
+        // LCD_Frown(); // 찌푸린 표정
         if (presentFace != 'F'){
             LCD_Frown(); // 찌푸린 표정
             presentFace = 'F';
         }
     }
     else if(checkTemperature(temperature)){ // 적정 온도여부 확인
+        // LCD_Sad(); // 슬픈 표정
         if (presentFace != 'D'){
             LCD_Sad(); // 슬픈 표정
             presentFace = 'D';
         }
     }
     else{
+        // LCD_Smile(); // 웃는 표정
         if (presentFace != 'S'){
             LCD_Smile(); // 웃는 표정
             presentFace = 'S';
@@ -239,7 +243,7 @@ int main(void)
     // LCD_DrawRectangle(40, 80, 80, 120);                   // 사각형 출력
     // LCD_ShowString(60, 100, "Button", MAGENTA, WHITE);    // "Button" 글자 출력
 
-    GPIOE->ODR = (GPIO_ODR_ODR1);// 모터 상시 작동
+    // GPIOE->ODR = (GPIO_ODR_ODR1);// 모터 상시 작동
     while (1)
     {
         //  LCD_ShowNum(40, 100, value, 4, BLUE, WHITE);
