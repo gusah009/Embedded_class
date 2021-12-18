@@ -8,7 +8,7 @@
 #include "lcd.h"
 #include "sensorConfigure.h"
 // #include "motorConfigure.h"
-// #include "bluetoothConfigure.h"
+#include "bluetoothConfigure.h"
 #include "utility.h"
 
 int main(void)
@@ -25,6 +25,9 @@ int main(void)
     /* LCD */
     LCD_Init();       // LCD 초기화
     LCD_Clear(WHITE); // LCD 배경 초기화
+
+    /* Bluetooth */
+    bluetoothInit();
     /*================== End Initilaize ==================*/
 
 

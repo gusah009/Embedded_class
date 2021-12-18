@@ -9,6 +9,9 @@
 
 void RCC_Configure_bluetooth(void);
 void GPIO_Configure_bluetooth(void);
+void USART1_Init(void);
 void USART2_Init(void);
 void NVIC_Configure_bluetooth(void);
+void sendDataUART1(uint16_t data);
 void sendDataUART2(uint16_t data);
+void bluetoothInit(void);
