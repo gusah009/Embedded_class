@@ -6,3 +6,4 @@
 
 void RCC_Configure_motor(void);
 void GPIO_Configure_motor(void);
+void motorInit(void);

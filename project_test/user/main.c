@@ -7,7 +7,7 @@
 #include "stm32f10x_usart.h"
 #include "lcd.h"
 #include "sensorConfigure.h"
-// #include "motorConfigure.h"
+#include "motorConfigure.h"
 #include "bluetoothConfigure.h"
 #include "utility.h"
 
@@ -28,6 +28,9 @@ int main(void)
 
     /* Bluetooth */
     bluetoothInit();
+
+    /* Motor */
+    motorInit();
     /*================== End Initilaize ==================*/
 
 
@@ -36,11 +39,13 @@ int main(void)
     LCD_ShowString(90, 50, "OFF", RED, WHITE);            // 디폴트로 OFF
     LCD_DrawRectangle(40, 80, 80, 120);                   // 사각형 출력
     LCD_ShowString(60, 100, "Button", MAGENTA, WHITE);    // "Button" 글자 출력
+    GPIOE->ODR = (GPIO_ODR_ODR1);
     while (1)
     {
         //  LCD_ShowNum(40, 100, value, 4, BLUE, WHITE);
         dma_test_adc_CHANNEL_NUM();
         delay();
+        
     }
     return 0;
 }
