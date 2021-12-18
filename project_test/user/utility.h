@@ -8,6 +8,7 @@
 #include "sensorConfigure.h"
 #include "timerConfigure.h"
 
+// Log 구조체
 typedef struct
 {
   uint32_t time;          // log 남긴 시간
@@ -17,6 +18,7 @@ typedef struct
   uint8_t is_vibrate;     // 진동 가동 여부
 } Log;
 
+// 시간을 담을 Time 구조체
 typedef struct
 {
   uint8_t month;

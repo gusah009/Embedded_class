@@ -1,5 +1,6 @@
 #include "timerConfigure.h"
 
+// 초 단위로 시간을 저장하는 변수
 volatile uint32_t TIME = 0;
 
 void RCC_Configure(void)
@@ -17,11 +18,9 @@ void PWM_Configure()
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
   TIM_TimeBaseStructure.TIM_Prescaler = (uint16_t)(SystemCoreClock / 1000000);
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseStructure.TIM_Period = 20000;
+  TIM_TimeBaseStructure.TIM_Period = 10000;
   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-  printf("SysClk: %d\n", (uint16_t)(SystemCoreClock / 1000000));
-  printf("TIM_Period: %d\n", TIM_TimeBaseStructure.TIM_Period);
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
   TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
   TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
@@ -45,4 +44,5 @@ void timerInit(void)
   GPIO_Configure();
   PWM_Configure();
   NVIC_Configure();
+  printf("TIMER INIT\n");
 }

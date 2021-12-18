@@ -14,6 +14,7 @@
 
 #define COMMAND_MAX 5
 
+// extern 함수는 각 변수가 선언된 고유 위치에 주석을 달아 놓았습니다.
 extern volatile uint32_t __status;
 extern volatile uint32_t TIME;
 extern volatile uint16_t LOG_INDEX;
@@ -25,6 +26,8 @@ volatile uint32_t TIM3_COUNTER = 0;
 volatile uint16_t COMMAND_LOG[COMMAND_MAX] = {'l', '\n'};
 
 volatile int NO_COMMAND_FLAG = 0;
+volatile int SEND_LOG_FLAG = 0;
+
 
 /*================== Start Bluetooth ==================*/
 void USART1_IRQHandler()
@@ -50,60 +53,44 @@ void USART2_IRQHandler()
     uint16_t word;
     if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
     {
-
-        // the most recent received data by the USART2 peripheral
         word = USART_ReceiveData(USART2);
-        command[COMMAND_INDEX] = word;
-        if (word == '\n')
+        command[COMMAND_INDEX] = word; // 사용자의 입력값을 command라는 char배열에 저장
+        
+        if (word == '\n') // 사용자가 엔터를 눌렀을 때,
         {
-            printf("!!!\n");
             int cmdIndex = 0;
             for (; cmdIndex <= COMMAND_INDEX; cmdIndex++)
             {
                 if (command[cmdIndex] != COMMAND_LOG[cmdIndex])
                 {
+                    // 사용자 명령어와 예약명령어(현재는 log기능을 나타내는 'l'명령어만 존재)를 비교하고
+                    // 예약된 명령어와 다르면 break로 cmdIndex를 COMMAND_INDEX와 다른 값으로 만들어줌.
                     break;
                 }
             }
 
+            // cmdIndex가 COMMAND_INDEX와 같은 값이면 명령어라는 뜻이므로 LOG 출력
             if (cmdIndex == COMMAND_INDEX + 1)
             {
-            printf("def\n");
-                Ts ts;
-                for (int logIndex = 0; logIndex < LOG_INDEX; logIndex++)
-                {
-                    ts = ConvertTimeInFormat(logs[logIndex].time);
-
-                    sendLogData(ts.month / 10 + '0',
-                                ts.month % 10 + '0',
-                                ts.day / 10 + '0',
-                                ts.day % 10 + '0',
-                                ts.hour / 10 + '0',
-                                ts.hour % 10 + '0',
-                                ts.min / 10 + '0',
-                                ts.min % 10 + '0',
-                                ts.sec / 10 + '0',
-                                ts.sec % 10 + '0',
-                                logs[logIndex].soil_moisture / 10 + '0',
-                                logs[logIndex].soil_moisture % 10 + '0',
-                                logs[logIndex].temperature / 10 + '0',
-                                logs[logIndex].temperature % 10 + '0',
-                                logs[logIndex].is_pump,
-                                logs[logIndex].is_vibrate);
-                }
+                // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                SEND_LOG_FLAG = 1;
             }
+            // cmdIndex가 COMMAND_INDEX와 다른 값이면 명령어가 아니라는 뜻이므로 다시 입력하라는 RETRY 출력
             else
             {
-                printf("%d\n", 'R');
+                // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
                 NO_COMMAND_FLAG = 1;
             }
+            // 엔터키가 눌러졌다면 command를 초기화.
             COMMAND_INDEX = 0;
         }
         else
         {
+            // 명령어를 최대 명령어 크기(COMMAND_MAX)까지 받아오는 모습.
             COMMAND_INDEX++;
             COMMAND_INDEX %= COMMAND_MAX;
         }
+
 
         /* ============ FOR DEBUGGING ============= */
         sendDataUART1(word); // send to USART1
@@ -134,8 +121,10 @@ void TIM3_IRQHandler(void)
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
     {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+        // MAX_TIME인 12월 31일 23:59:59가 지나가는 순간 0으로 초기화 시켜주는 부분
         if (TIME == MAX_TIME)
             TIME = 0;
+        // COUNTER가 0.01s마다 1씩 증가하기 때문에 100이 되면 1초 증가시켜주는 부분.
         if (TIM3_COUNTER == 100)
         {
             TIME++;
@@ -184,17 +173,43 @@ int main(void)
     {
         //  LCD_ShowNum(40, 100, value, 4, BLUE, WHITE);
         // dma_test_adc_CHANNEL_NUM();
-        delay(10000000);
+        delay(100000);
+
         if (NO_COMMAND_FLAG) {
-            uint16_t w = 0x52;
-            sendDataUART2(w);
-            sendDataUART2(69);
-            sendDataUART2((uint16_t)'T');
-            sendDataUART2((uint16_t)'R');
-            sendDataUART2((uint16_t)'Y');
-            sendDataUART2((uint16_t)'!');
-            sendDataUART2((uint16_t)'\n');
+            sendDataUART2('R');
+            sendDataUART2('E');
+            sendDataUART2('T');
+            sendDataUART2('R');
+            sendDataUART2('Y');
+            sendDataUART2('!');
+            sendDataUART2('\n');
             NO_COMMAND_FLAG = 0;
+        }
+
+        if (SEND_LOG_FLAG) {
+            Ts ts;
+            for (int logIndex = 0; logIndex < LOG_INDEX; logIndex++)
+            {
+                ts = ConvertTimeInFormat(logs[logIndex].time);
+                // 시간, 온도, 습도같은 int형 변수를 char단위로 쪼개서 인자로 보내주는 함수
+                sendLogData(ts.month / 10 + '0',
+                            ts.month % 10 + '0',
+                            ts.day / 10 + '0',
+                            ts.day % 10 + '0',
+                            ts.hour / 10 + '0',
+                            ts.hour % 10 + '0',
+                            ts.min / 10 + '0',
+                            ts.min % 10 + '0',
+                            ts.sec / 10 + '0',
+                            ts.sec % 10 + '0',
+                            logs[logIndex].soil_moisture / 10 + '0',
+                            logs[logIndex].soil_moisture % 10 + '0',
+                            logs[logIndex].temperature / 10 + '0',
+                            logs[logIndex].temperature % 10 + '0',
+                            logs[logIndex].is_pump,
+                            logs[logIndex].is_vibrate);
+                SEND_LOG_FLAG = 0;
+            }
         }
     }
     return 0;

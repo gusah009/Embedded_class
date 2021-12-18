@@ -117,4 +117,6 @@ void bluetoothInit(void)
   NVIC_Configure_bluetooth();
   USART1_Init();
   USART2_Init();
+  
+  printf("BLUETOOTH INIT\n");
 }

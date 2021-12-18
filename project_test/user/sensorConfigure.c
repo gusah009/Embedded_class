@@ -1,6 +1,9 @@
 #include "sensorConfigure.h"
 
+// 모든 센서의 값들이 해당 배열안에 저장됨.
 volatile uint16_t ADC_values[ARRAYSIZE];
+
+// DEBUG: DMA 인터럽트가 얼마나 자주 일어나는 지 보기 위함.
 volatile uint32_t __status = 0;
 
 void RCC_Configure_sensor(void)
@@ -77,7 +80,6 @@ void ADC_Configure_sensor(void)
   ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 5, Cycles); // PC1
   ADC_RegularChannelConfig(ADC1, ADC_Channel_13, 6, Cycles); // PC3
   ADC_RegularChannelConfig(ADC1, ADC_Channel_14, 7, Cycles); // PC4
-  // ADC_RegularChannelConfig(ADC1, ADC_Channel_7,  8, Cycles); // 모터
   //Enable ADC1
   ADC_Cmd(ADC1, ENABLE);
   //enable DMA for ADC
@@ -129,6 +131,7 @@ void DMA_Configure_sensor(void)
   DMA_Cmd(DMA1_Channel1, ENABLE); //Enable the DMA1 - Channel1
 }
 
+// DEBUG: 각 센서의 값을 확인하기 위한 함수
 void dma_test_adc_CHANNEL_NUM(void)
 {
   if (!__status)
@@ -145,6 +148,7 @@ __status = 0;
   ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 }
 
+// 각 센서값을 SensorVal이라는 구조체에 넣어서 반환해주는 함수.
 SensorVal getSensorValue(void)
 {
   SensorVal sensorVal;
@@ -194,6 +198,8 @@ void NVIC_Configure_sensor(void)
   NVIC_InitTypeDef NVIC_InitStructure;
   //Enable DMA1 channel IRQ Channel */
   NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+  // Sensor의 입력을 가장 최우선으로 받아옴.
+  // Sensor > Bluetooth > TIME
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -209,4 +215,6 @@ void sensorInit(void)
   DMA_Configure_sensor();
 
   ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+  
+  printf("SENSOR INIT\n");
 }
