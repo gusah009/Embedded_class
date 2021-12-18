@@ -13,6 +13,7 @@
 
 int main(void)
 {
+    /*================== Start Initilaize ==================*/
     SystemInit();
 
     /* NVIC은 Priority Group Config는 모든 설정에 공통되야 하므로 main에서 앞쪽에 선언해주었습니다. */
@@ -24,6 +25,9 @@ int main(void)
     /* LCD */
     LCD_Init();       // LCD 초기화
     LCD_Clear(WHITE); // LCD 배경 초기화
+    /*================== End Initilaize ==================*/
+
+
 
     LCD_ShowString(40, 10, "MON_Team02", MAGENTA, WHITE); // 팀명 출력
     LCD_ShowString(90, 50, "OFF", RED, WHITE);            // 디폴트로 OFF

@@ -160,7 +160,6 @@ void DMA1_Channel1_IRQHandler(void)
   }
 }
 
-int adc_view_flag = 1;
 void dma_test_adc_CHANNEL_NUM(void)
 {
   if (!__status)
@@ -168,29 +167,58 @@ void dma_test_adc_CHANNEL_NUM(void)
 
   uint8_t index;
   ADC_SoftwareStartConvCmd(ADC1, DISABLE);
-  if (adc_view_flag)
+  for (index = 0; index < CHANNEL_NUM; index++)
   {
-    for (index = 0; index < CHANNEL_NUM; index++)
-    {
-        printf("%d ADC value on ch%d = %d ,%d\r\n",
-               __status, index + 1, (uint16_t)((ADC_values[index] + ADC_values[index + CHANNEL_NUM] + ADC_values[index + CHANNEL_NUM * 2] + ADC_values[index + CHANNEL_NUM * 3]) / 4), ADC_values[index]);
-    }
-    // ADC_values[0] - 3400이 250 이상일 때 유지 아니면 넘어짐
-    // printf("%d ADC value on ch%d = %d ,%d\r\n",
-    //            __status, 0 + 1, (uint16_t)((ADC_values[0] + ADC_values[0 + CHANNEL_NUM] + ADC_values[0 + CHANNEL_NUM * 2] + ADC_values[0 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[0]);
-    // printf("%d ADC value on ch%d = %d ,%d\r\n",
-    //            __status, 1 + 1, (uint16_t)((ADC_values[1] + ADC_values[1 + CHANNEL_NUM] + ADC_values[1 + CHANNEL_NUM * 2] + ADC_values[1 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[1]);
-    // printf("%d ADC value on ch%d = %d ,%d\r\n",
-    //            __status, 2 + 1, (uint16_t)((ADC_values[2] + ADC_values[2 + CHANNEL_NUM] + ADC_values[2 + CHANNEL_NUM * 2] + ADC_values[2 + CHANNEL_NUM * 3]) / 4) - 1600, ADC_values[2]);
-
-    // printf("%d ADC value on ch%d = %d ,%d\r\n",
-    //            __status, 3 + 1, (uint16_t)((ADC_values[3] + ADC_values[3 + CHANNEL_NUM] + ADC_values[3 + CHANNEL_NUM * 2] + ADC_values[3 + CHANNEL_NUM * 3]) / 4) - 3400, ADC_values[3]);
-    // printf("=========================\n\r");
-
-    // printf("%d ADC value on ch%d = %d ,%d\r\n",
-    //        __status, 4 + 1, (uint16_t)((ADC_values[4] + ADC_values[4 + CHANNEL_NUM] + ADC_values[4 + CHANNEL_NUM * 2] + ADC_values[4 + CHANNEL_NUM * 3]) / 4), ADC_values[4]);
-    // printf("=========================\n\r");
+      printf("%d ADC value on ch%d = %d ,%d\r\n",
+              __status, index + 1, (uint16_t)((ADC_values[index] + ADC_values[index + CHANNEL_NUM] + ADC_values[index + CHANNEL_NUM * 2] + ADC_values[index + CHANNEL_NUM * 3]) / 4), ADC_values[index]);
   }
+__status = 0;
+  ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+}
+
+SensorVal getSensorValue(void)
+{
+  if (!__status)
+    return;
+
+  SensorVal sensorVal;
+
+  ADC_SoftwareStartConvCmd(ADC1, DISABLE);
+
+  sensorVal.gyro_x = (uint16_t)((ADC_values[0]                   + 
+                                 ADC_values[0 + CHANNEL_NUM]     + 
+                                 ADC_values[0 + CHANNEL_NUM * 2] + 
+                                 ADC_values[0 + CHANNEL_NUM * 3]) / 4);
+
+  sensorVal.gyro_y = (uint16_t)((ADC_values[1]                   + 
+                                 ADC_values[1 + CHANNEL_NUM]     + 
+                                 ADC_values[1 + CHANNEL_NUM * 2] + 
+                                 ADC_values[1 + CHANNEL_NUM * 3]) / 4);
+
+  sensorVal.gyro_z = (uint16_t)((ADC_values[2]                   + 
+                                 ADC_values[2 + CHANNEL_NUM]     + 
+                                 ADC_values[2 + CHANNEL_NUM * 2] + 
+                                 ADC_values[2 + CHANNEL_NUM * 3]) / 4);
+
+  sensorVal.water_height = (uint16_t)((ADC_values[3]                   + 
+                                       ADC_values[3 + CHANNEL_NUM]     + 
+                                       ADC_values[3 + CHANNEL_NUM * 2] + 
+                                       ADC_values[3 + CHANNEL_NUM * 3]) / 4);
+
+  sensorVal.temperature = (uint16_t)((ADC_values[4]                   + 
+                                      ADC_values[4 + CHANNEL_NUM]     + 
+                                      ADC_values[4 + CHANNEL_NUM * 2] + 
+                                      ADC_values[4 + CHANNEL_NUM * 3]) / 4);
+
+  sensorVal.soil_moisture = (uint16_t)((ADC_values[5]                   + 
+                                        ADC_values[5 + CHANNEL_NUM]     + 
+                                        ADC_values[5 + CHANNEL_NUM * 2] + 
+                                        ADC_values[5 + CHANNEL_NUM * 3]) / 4);
+                                        
+  sensorVal.vibration = (uint16_t)((ADC_values[6]                   + 
+                                    ADC_values[6 + CHANNEL_NUM]     + 
+                                    ADC_values[6 + CHANNEL_NUM * 2] + 
+                                    ADC_values[6 + CHANNEL_NUM * 3]) / 4);
   __status = 0;
   ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 }

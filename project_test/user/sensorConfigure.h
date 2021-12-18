@@ -12,6 +12,16 @@
 #define Cycles ADC_SampleTime_13Cycles5
 //#define Cycles ADC_SampleTime_41Cycles5
 
+typedef struct
+{
+  uint16_t gyro_x;
+  uint16_t gyro_y;
+  uint16_t gyro_z;
+  uint16_t water_height;
+  uint16_t temperature;
+  uint16_t soil_moisture;
+  uint16_t vibration;
+}  SensorVal;
 // 4000보다 크면 흔들림, 200보다 작으면 안흔들림
 
 /* function prototype */
@@ -23,3 +33,4 @@ void DMA_Configure_sensor(void);
 void DMA1_Channel1_IRQHandler(void);
 void dma_test_adc_CHANNEL_NUM(void);
 void sensorInit(void);
+SensorVal getSensorValue(void);
