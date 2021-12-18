@@ -1,6 +1,6 @@
 #include "timerConfigure.h"
 
-volatile uint32_t TIM3_Counter = 0;
+volatile uint32_t TIME = 0;
 
 void RCC_Configure(void)
 {

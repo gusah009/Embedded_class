@@ -4,6 +4,8 @@
     "bluetoothconfigure.h": "c",
     "utility.h": "c",
     "timerconfigure.h": "c",
-    "stm32f10x.h": "c"
+    "stm32f10x.h": "c",
+    "lcd.h": "c",
+    "time.h": "c"
   }
 }

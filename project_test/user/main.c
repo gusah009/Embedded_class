@@ -13,7 +13,11 @@
 #include "utility.h"
 
 extern volatile uint32_t __status;
-extern volatile uint32_t TIM3_Counter;
+extern volatile uint32_t TIME;
+extern volatile uint16_t LOG_INDEX;
+extern const volatile uint32_t MAX_TIME;
+extern Log logs[UINT16_MAX];
+volatile uint32_t TIM3_COUNTER = 0;
 
 /*================== Start Bluetooth ==================*/
 void sendDataUART1(uint16_t data)
@@ -82,12 +86,20 @@ void TIM3_IRQHandler(void)
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
     {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-        if (TIM3_Counter % 100 == 0) printf("TIMER: %d\n", TIM3_Counter);
-        TIM3_Counter++;
+        if (TIME == MAX_TIME) TIME = 0;
+        if (TIM3_COUNTER == 100) {
+            TIME++;
+            printf("TIMER: %d\n", TIME);
+            TIM3_COUNTER = 0;
+        }
+        TIM3_COUNTER++;
     }
 }
 /*================== End Timer Interrupt ==================*/
 
+/*================== Start Log Func ==================*/
+
+/*================== End Log Func ==================*/
 int main(void)
 {
     /*================== Start Initilaize ==================*/
