@@ -23,8 +23,8 @@ void PWM_Configure()
   TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
   TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-  TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
   TIM_Cmd(TIM3, ENABLE);
+  TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
 }
 
 void NVIC_Configure(void)

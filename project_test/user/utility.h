@@ -41,5 +41,9 @@ void sendLogData(uint16_t month1,         uint16_t month2,
                  uint16_t is_pump,        uint16_t is_vibrate);
 void sendDataUART1(uint16_t data);
 void sendDataUART2(uint16_t data);
+void Send_Input_Month_MSG(void);
+void Send_Input_Day_MSG(void);
+void Send_Input_Hour_MSG(void);
+void Send_Input_Minute_MSG(void);
 
 #endif

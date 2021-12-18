@@ -8,7 +8,7 @@ volatile uint16_t LOG_INDEX = 0;
 // LOG는 최대 1000개 까지 저장할 수 있게 제작
 Log logs[1000];
 
-uint8_t MONTH_PER_DAY[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+uint32_t MONTH_PER_DAY[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 // 우리 프로젝트에서 표현가능한 최대 시간인 12-31 23:59:59를 초단위로 계산
 const volatile uint32_t MAX_TIME = 31 * 86400 +
@@ -54,20 +54,20 @@ Ts ConvertTimeInFormat(uint32_t secs)
     Ts ts;
     ts.month = 0;
     for (; ts.month < 12; ts.month++) {
-        if (secs - MONTH_PER_DAY[ts.month] * 86400 < 0) {
+        if ((int)(secs - MONTH_PER_DAY[ts.month] * 86400) < 0) {
             break;
         } else {
             secs -= MONTH_PER_DAY[ts.month] * 86400;
         }
     }
     ts.month += 1;
-    ts.sec = secs % 60;
-    secs /= 60;
-    ts.min = secs % 60;
-    secs /= 60;
-    ts.hour = secs % 24;
-    secs /= 24;
-    ts.day = secs + 1;
+    ts.day = secs / 86400 + 1;
+    secs %= 86400;
+    ts.hour = secs / 3600;
+    secs %= 3600;
+    ts.min = secs / 60;
+    secs %= 60;
+    ts.sec = secs;
 
     return ts;
 }
@@ -127,6 +127,68 @@ void sendLogData(uint16_t month1, uint16_t month2, uint16_t day1, uint16_t day2,
     sendDataUART2('\n');
 }
 
+void Send_Input_Month_MSG()
+{
+    sendDataUART2('I');
+    sendDataUART2('N');
+    sendDataUART2('P');
+    sendDataUART2('U');
+    sendDataUART2('T');
+    sendDataUART2(' ');
+    sendDataUART2('M');
+    sendDataUART2('O');
+    sendDataUART2('N');
+    sendDataUART2('T');
+    sendDataUART2('H');
+    sendDataUART2('\n');
+}
+
+
+void Send_Input_Day_MSG()
+{
+    sendDataUART2('I');
+    sendDataUART2('N');
+    sendDataUART2('P');
+    sendDataUART2('U');
+    sendDataUART2('T');
+    sendDataUART2(' ');
+    sendDataUART2('D');
+    sendDataUART2('A');
+    sendDataUART2('Y');
+    sendDataUART2('\n');
+}
+
+void Send_Input_Hour_MSG()
+{
+    sendDataUART2('I');
+    sendDataUART2('N');
+    sendDataUART2('P');
+    sendDataUART2('U');
+    sendDataUART2('T');
+    sendDataUART2(' ');
+    sendDataUART2('H');
+    sendDataUART2('O');
+    sendDataUART2('U');
+    sendDataUART2('R');
+    sendDataUART2('\n');
+}
+
+void Send_Input_Minute_MSG()
+{
+    sendDataUART2('I');
+    sendDataUART2('N');
+    sendDataUART2('P');
+    sendDataUART2('U');
+    sendDataUART2('T');
+    sendDataUART2(' ');
+    sendDataUART2('M');
+    sendDataUART2('I');
+    sendDataUART2('N');
+    sendDataUART2('U');
+    sendDataUART2('T');
+    sendDataUART2('E');
+    sendDataUART2('\n');
+}
 void sendDataUART1(uint16_t data)
 {
     USART_SendData(USART1, data);
@@ -136,7 +198,6 @@ void sendDataUART1(uint16_t data)
 
 void sendDataUART2(uint16_t data)
 {
-    printf("%c", data);
     USART_SendData(USART2, data);
     /* Wait till TC is set */
     while ((USART2->SR & USART_SR_TC) == 0);

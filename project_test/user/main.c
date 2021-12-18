@@ -13,20 +13,49 @@
 #include "utility.h"
 
 #define COMMAND_MAX 5
+#define DATE_MAX 3
+#define SET_MONTH 1
+#define SET_DAY 2
+#define SET_HOUR 3
+#define SET_MIN 4
 
 // extern 함수는 각 변수가 선언된 고유 위치에 주석을 달아 놓았습니다.
 extern volatile uint32_t __status;
 extern volatile uint32_t TIME;
 extern volatile uint16_t LOG_INDEX;
 extern const volatile uint32_t MAX_TIME;
+extern uint32_t MONTH_PER_DAY[12];
 extern Log logs[1000];
+
+// 명령어 버퍼
 uint16_t command[COMMAND_MAX];
+
+// 명령어 문자열의 크기
 volatile uint8_t COMMAND_INDEX = 0;
+// 10ms 단위로 증가하는 COUNTER
 volatile uint32_t TIM3_COUNTER = 0;
+// log를 출력하라는 명령어인 'l' 명령어
 volatile uint16_t COMMAND_LOG[COMMAND_MAX] = {'l', '\n'};
 
-volatile int NO_COMMAND_FLAG = 0;
+// 현재 시간 버퍼
+uint16_t date[DATE_MAX];
+// 현재 시간을 담는 문자열의 크기
+volatile uint8_t DATE_INDEX = 0;
+
+// 입력한 명령어가 명령어가 아닐 경우 1
+volatile int RETRY_FLAG = 0;
+// 입력한 명령어가 LOG 출력 명령어일 경우 1
 volatile int SEND_LOG_FLAG = 0;
+// 시간 설정 상태면 1 이상
+volatile int SET_CLOCK_FLAG = SET_MONTH;
+// MONTH 설정 문구를 보낼 때 1
+volatile int SET_MONTH_MSG_FLAG = 0;
+// DAY 설정 문구를 보낼 때 1
+volatile int SET_DAY_MSG_FLAG = 0;
+// HOUR 설정 문구를 보낼 때 1
+volatile int SET_HOUR_MSG_FLAG = 0;
+// MINUTE 설정 문구를 보낼 때 1
+volatile int SET_MIN_MSG_FLAG = 0;
 
 uint8_t presentFace = 'S'; // 초기 표정은 웃는표정 가정
 /*================== Value Check ==================*/
@@ -110,8 +139,8 @@ void USART1_IRQHandler()
 
         // the most recent received data by the USART1 peripheral
         word = USART_ReceiveData(USART1);
-          
-        printf("word: %d\n", word);
+
+        // printf("word: %d\n", word);
         sendDataUART2(word); // send to USART2
         sendDataUART1(word); // send to USART1
 
@@ -126,43 +155,126 @@ void USART2_IRQHandler()
     if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
     {
         word = USART_ReceiveData(USART2);
-        command[COMMAND_INDEX] = word; // 사용자의 입력값을 command라는 char배열에 저장
-        
-        if (word == '\n') // 사용자가 엔터를 눌렀을 때,
-        {
-            int cmdIndex = 0;
-            for (; cmdIndex <= COMMAND_INDEX; cmdIndex++)
-            {
-                if (command[cmdIndex] != COMMAND_LOG[cmdIndex])
-                {
-                    // 사용자 명령어와 예약명령어(현재는 log기능을 나타내는 'l'명령어만 존재)를 비교하고
-                    // 예약된 명령어와 다르면 break로 cmdIndex를 COMMAND_INDEX와 다른 값으로 만들어줌.
-                    break;
-                }
-            }
+        // printf("USART2 : %d \n", word);
 
-            // cmdIndex가 COMMAND_INDEX와 같은 값이면 명령어라는 뜻이므로 LOG 출력
-            if (cmdIndex == COMMAND_INDEX + 1)
+        // 현재 시간 입력 상태면
+        if (SET_CLOCK_FLAG)
+        {
+            date[DATE_INDEX] = word; // 사용자의 입력값을 date라는 char배열에 저장
+            DATE_INDEX++;
+            if (word == '\n')              // 사용자가 엔터를 눌렀을 때,
             {
-                // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
-                SEND_LOG_FLAG = 1;
+                if (SET_CLOCK_FLAG == SET_MONTH)
+                {
+                    // 입력 포멧에 맞게 입력했을 때
+                    if (DATE_INDEX == DATE_MAX)
+                    {
+                        // 1 ~ 12 값이면
+                        if ((date[0] == '0' && '0' < date[1] && date[1] <= '9') ||
+                            (date[0] == '1' && (date[1] == '1' || date[1] == '2'))) {
+                            for (int i = 0; i < (date[0] - '0') * 10 + (date[1] - '0') - 1; i++) {
+                                TIME += MONTH_PER_DAY[i] * 86400;
+                            }
+                            SET_CLOCK_FLAG = SET_DAY;
+                        } else SET_MONTH_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                    } else SET_MONTH_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                }
+                else if (SET_CLOCK_FLAG == SET_DAY)
+                {
+                    // 입력 포멧에 맞게 입력했을 때
+                    if (DATE_INDEX == DATE_MAX)
+                    {
+                        // 1 ~ 31 값이면
+                        if ((date[0] == '0' && '0' < date[1] && date[1] <= '9') ||
+                            (date[0] == '1' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '2' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '3' && '0' <= date[1] && date[1] <= '1')) {
+                                TIME += ((date[0] - '0') * 10 + (date[1] - '0') - 1) * 86400;
+                                SET_CLOCK_FLAG = SET_HOUR;
+                            } else SET_DAY_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                    } else SET_DAY_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                }
+                else if (SET_CLOCK_FLAG == SET_HOUR)
+                {
+                    // 입력 포멧에 맞게 입력했을 때
+                    if (DATE_INDEX == DATE_MAX)
+                    {
+                        // 0 ~ 23 값이면
+                        if ((date[0] == '0' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '1' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '2' && '0' <= date[1] && date[1] <= '3')) {
+                                TIME += ((date[0] - '0') * 10 + (date[1] - '0')) * 3600;
+                                SET_CLOCK_FLAG = SET_MIN;
+                        } else SET_HOUR_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                    } else SET_HOUR_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                }
+                else if (SET_CLOCK_FLAG == SET_MIN)
+                {
+                    // 입력 포멧에 맞게 입력했을 때
+                    if (DATE_INDEX == DATE_MAX)
+                    {
+                        // 0 ~ 59 값이면
+                        if ((date[0] == '0' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '1' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '2' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '3' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '4' && '0' <= date[1] && date[1] <= '9') ||
+                            (date[0] == '5' && '0' <= date[1] && date[1] <= '9')) {
+                                TIME += ((date[0] - '0') * 10 + (date[1] - '0')) * 60;
+                                
+                                // 시간 설정이 끝나면 TIMER 가동
+                                TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+                            }else SET_MIN_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                    } else SET_MIN_MSG_FLAG = 1; // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+
+                }
+                // 엔터키가 눌러졌다면 date를 초기화.
+                DATE_INDEX = 0;
             }
-            // cmdIndex가 COMMAND_INDEX와 다른 값이면 명령어가 아니라는 뜻이므로 다시 입력하라는 RETRY 출력
             else
             {
-                // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
-                NO_COMMAND_FLAG = 1;
+                // 명령어를 최대 명령어 크기(DATE_MAX)까지 받아오는 모습.
+                DATE_INDEX %= DATE_MAX;
             }
-            // 엔터키가 눌러졌다면 command를 초기화.
-            COMMAND_INDEX = 0;
         }
         else
         {
-            // 명령어를 최대 명령어 크기(COMMAND_MAX)까지 받아오는 모습.
-            COMMAND_INDEX++;
-            COMMAND_INDEX %= COMMAND_MAX;
-        }
+            command[COMMAND_INDEX] = word; // 사용자의 입력값을 command라는 char배열에 저장
+            if (word == '\n')              // 사용자가 엔터를 눌렀을 때,
+            {
+                int cmdIndex = 0;
+                for (; cmdIndex <= COMMAND_INDEX; cmdIndex++)
+                {
+                    if (command[cmdIndex] != COMMAND_LOG[cmdIndex])
+                    {
+                        // 사용자 명령어와 예약명령어(현재는 log기능을 나타내는 'l'명령어만 존재)를 비교하고
+                        // 예약된 명령어와 다르면 break로 cmdIndex를 COMMAND_INDEX와 다른 값으로 만들어줌.
+                        break;
+                    }
+                }
 
+                // cmdIndex가 COMMAND_INDEX와 같은 값이면 명령어라는 뜻이므로 LOG 출력
+                if (cmdIndex == COMMAND_INDEX + 1)
+                {
+                    // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                    SEND_LOG_FLAG = 1;
+                }
+                // cmdIndex가 COMMAND_INDEX와 다른 값이면 명령어가 아니라는 뜻이므로 다시 입력하라는 RETRY 출력
+                else
+                {
+                    // Interrupt 도중에 출력하지 않고, Interrupt가 끝나면 main으로 돌아가서 실행.
+                    RETRY_FLAG = 1;
+                }
+                // 엔터키가 눌러졌다면 command를 초기화.
+                COMMAND_INDEX = 0;
+            }
+            else
+            {
+                // 명령어를 최대 명령어 크기(COMMAND_MAX)까지 받아오는 모습.
+                COMMAND_INDEX++;
+                COMMAND_INDEX %= COMMAND_MAX;
+            }
+        }
 
         /* ============ FOR DEBUGGING ============= */
         sendDataUART1(word); // send to USART1
@@ -237,20 +349,29 @@ int main(void)
     timerInit();
     /*================== End Initilaize ==================*/
 
-    LCD_Clear(WHITE);                                     // LCD 배경 초기화
-    // LCD_ShowString(40, 10, "MON_Team02", MAGENTA, WHITE); // 팀명 출력
-    // LCD_ShowString(90, 50, "OFF", RED, WHITE);            // 디폴트로 OFF
-    // LCD_DrawRectangle(40, 80, 80, 120);                   // 사각형 출력
-    // LCD_ShowString(60, 100, "Button", MAGENTA, WHITE);    // "Button" 글자 출력
-
-    // GPIOE->ODR = (GPIO_ODR_ODR1);// 모터 상시 작동
+    LCD_Clear(WHITE); // LCD 배경 초기화
     while (1)
     {
         //  LCD_ShowNum(40, 100, value, 4, BLUE, WHITE);
         // dma_test_adc_CHANNEL_NUM();
         delay(100000);
 
-        if (NO_COMMAND_FLAG) {
+        if (SET_MONTH_MSG_FLAG) {
+            Send_Input_Month_MSG();
+            SET_MONTH_MSG_FLAG = 0;
+        } else if (SET_DAY_MSG_FLAG) {
+            Send_Input_Day_MSG();
+            SET_DAY_MSG_FLAG = 0;
+        } else if (SET_HOUR_MSG_FLAG) {
+            Send_Input_Hour_MSG();
+            SET_HOUR_MSG_FLAG = 0;
+        } else if (SET_MIN_MSG_FLAG) {
+            Send_Input_Minute_MSG();
+            SET_MIN_MSG_FLAG = 0;
+        }
+
+        if (RETRY_FLAG)
+        {
             sendDataUART2('R');
             sendDataUART2('E');
             sendDataUART2('T');
@@ -258,10 +379,11 @@ int main(void)
             sendDataUART2('Y');
             sendDataUART2('!');
             sendDataUART2('\n');
-            NO_COMMAND_FLAG = 0;
+            RETRY_FLAG = 0;
         }
 
-        if (SEND_LOG_FLAG) {
+        if (SEND_LOG_FLAG)
+        {
             Ts ts;
             for (int logIndex = 0; logIndex < LOG_INDEX; logIndex++)
             {
