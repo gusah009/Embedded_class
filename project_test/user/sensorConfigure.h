@@ -1,3 +1,6 @@
+#ifndef __SENSOR_H_
+#define __SENSOR_H_
+
 #include "stm32f10x.h"
 #include "core_cm3.h"
 #include "misc.h"
@@ -34,3 +37,5 @@ void DMA1_Channel1_IRQHandler(void);
 void dma_test_adc_CHANNEL_NUM(void);
 void sensorInit(void);
 SensorVal getSensorValue(void);
+
+#endif

@@ -2,6 +2,8 @@
   "files.associations": {
     "misc.h": "c",
     "bluetoothconfigure.h": "c",
-    "utility.h": "c"
+    "utility.h": "c",
+    "timerconfigure.h": "c",
+    "stm32f10x.h": "c"
   }
 }

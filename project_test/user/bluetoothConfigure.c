@@ -96,7 +96,7 @@ void NVIC_Configure_bluetooth(void)
   // 'NVIC_EnableIRQ' is only required for USART setting
   NVIC_EnableIRQ(USART1_IRQn);
   NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
@@ -104,55 +104,10 @@ void NVIC_Configure_bluetooth(void)
   // UART2
   NVIC_EnableIRQ(USART2_IRQn);
   NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
-}
-
-void USART1_IRQHandler()
-{
-  uint16_t word;
-  if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
-  {
-
-    // the most recent received data by the USART1 peripheral
-    word = USART_ReceiveData(USART1);
-    sendDataUART2(word); // send to USART2
-    sendDataUART1(word); // send to USART1
-
-    // clear 'Read data register not empty' flag
-    USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-  }
-}
-
-void USART2_IRQHandler()
-{
-  uint16_t word;
-  if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
-  {
-
-    // the most recent received data by the USART2 peripheral
-    word = USART_ReceiveData(USART2);
-    sendDataUART1(word); // send to USART1
-
-    // clear 'Read data register not empty' flag
-    USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-  }
-}
-
-void sendDataUART1(uint16_t data)
-{
-  USART_SendData(USART1, data);
-  /* Wait till TC is set */
-  // while ((USART1->SR & USART_SR_TC) == 0);
-}
-
-void sendDataUART2(uint16_t data)
-{
-  USART_SendData(USART2, data);
-  /* Wait till TC is set */
-  // while ((USART2->SR & USART_SR_TC) == 0);
 }
 
 void bluetoothInit(void)

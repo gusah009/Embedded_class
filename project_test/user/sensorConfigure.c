@@ -1,7 +1,7 @@
 #include "sensorConfigure.h"
 
 volatile uint16_t ADC_values[ARRAYSIZE];
-static volatile uint32_t __status = 0;
+volatile uint32_t __status = 0;
 
 void RCC_Configure_sensor(void)
 {
@@ -47,27 +47,6 @@ void GPIO_Configure_sensor(void)
   GPIOC_InitStructure.GPIO_Pin = GPIO_Pin_4;
   GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
   GPIO_Init(GPIOA, &GPIOC_InitStructure);
-
-  // // 모터
-  // GPIO_StructInit(&GPIOE_InitStructure);
-  // GPIOE_InitStructure.GPIO_Pin = GPIO_Pin_0;
-  // GPIOE_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-  // GPIO_Init(GPIOA, &GPIOE_InitStructure);
-
-  /* UART2 pin setting - Bluetooth 모듈 */
-  //TX a2
-  GPIO_StructInit(&GPIOA_InitStructure);
-  GPIOA_InitStructure.GPIO_Pin = GPIO_Pin_2;
-  GPIOA_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIOA_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_Init(GPIOA, &GPIOA_InitStructure);
-
-  //RX a3
-  GPIO_StructInit(&GPIOA_InitStructure);
-  GPIOA_InitStructure.GPIO_Pin = GPIO_Pin_3;
-  GPIOA_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIOA_InitStructure.GPIO_Mode = (GPIO_Mode_IPD) | (GPIO_Mode_IPU);
-  GPIO_Init(GPIOA, &GPIOA_InitStructure);
 }
 
 void ADC_Configure_sensor(void)
@@ -150,16 +129,6 @@ void DMA_Configure_sensor(void)
   DMA_Cmd(DMA1_Channel1, ENABLE); //Enable the DMA1 - Channel1
 }
 
-void DMA1_Channel1_IRQHandler(void)
-{
-  //Test on DMA1 Channel1 Transfer Complete interrupt
-  if (DMA_GetITStatus(DMA1_IT_TC1))
-  {
-    DMA_ClearITPendingBit(DMA1_IT_TC1 | DMA1_IT_GL1);
-    __status++;
-  }
-}
-
 void dma_test_adc_CHANNEL_NUM(void)
 {
   if (!__status)
@@ -178,9 +147,6 @@ __status = 0;
 
 SensorVal getSensorValue(void)
 {
-  if (!__status)
-    return;
-
   SensorVal sensorVal;
 
   ADC_SoftwareStartConvCmd(ADC1, DISABLE);
@@ -228,7 +194,7 @@ void NVIC_Configure_sensor(void)
   NVIC_InitTypeDef NVIC_InitStructure;
   //Enable DMA1 channel IRQ Channel */
   NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
