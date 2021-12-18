@@ -2,7 +2,7 @@
 
 extern volatile uint32_t TIME;
 volatile uint16_t LOG_INDEX = 0;
-Log logs[UINT16_MAX];
+Log logs[1000];
 uint8_t MONTH_PER_DAY[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 const volatile uint32_t MAX_TIME = 31 * 86400 +
                                    28 * 86400 +
@@ -17,9 +17,9 @@ const volatile uint32_t MAX_TIME = 31 * 86400 +
                                    30 * 86400 +
                                    31 * 86400;
 
-void delay(void)
+void delay(uint32_t s)
 {
-    for (int i = 0; i < 10000000; i++)
+    for (int i = 0; i < s; i++)
     {
         continue;
     }
@@ -59,4 +59,70 @@ Ts ConvertTimeInFormat(uint32_t secs)
     ts.day = secs + 1;
 
     return ts;
+}
+
+
+void sendLogData(uint16_t month1, uint16_t month2, uint16_t day1, uint16_t day2, uint16_t hour1, uint16_t hour2, uint16_t minute1, uint16_t minute2, uint16_t second1, uint16_t second2,
+                 uint16_t temperature1, uint16_t temperature2, uint16_t soil_moisture1, uint16_t soil_moisture2, uint16_t is_pump, uint16_t is_vibrate)
+{
+
+    sendDataUART2(month1);
+    sendDataUART2(month2);
+    sendDataUART2('-');
+    sendDataUART2(day1);
+    sendDataUART2(day2);
+    sendDataUART2(' ');
+    sendDataUART2(hour1);
+    sendDataUART2(hour2);
+    sendDataUART2(':');
+    sendDataUART2(minute1);
+    sendDataUART2(minute2);
+    sendDataUART2(':');
+    sendDataUART2(second1);
+    sendDataUART2(second2);
+    sendDataUART2(' ');
+    sendDataUART2(temperature1);
+    sendDataUART2(temperature2);
+    sendDataUART2('C');
+    sendDataUART2(soil_moisture1);
+    sendDataUART2(soil_moisture2);
+    sendDataUART2('%');
+    if (is_pump)
+    {
+        sendDataUART2('P');
+        sendDataUART2('U');
+        sendDataUART2('M');
+        sendDataUART2('P');
+        sendDataUART2('E');
+        sendDataUART2('D');
+        sendDataUART2('!');
+    }
+    if (is_vibrate)
+    {
+        sendDataUART2('V');
+        sendDataUART2('I');
+        sendDataUART2('B');
+        sendDataUART2('R');
+        sendDataUART2('A');
+        sendDataUART2('T');
+        sendDataUART2('E');
+        sendDataUART2('D');
+        sendDataUART2('!');
+    }
+    sendDataUART2('\n');
+}
+
+void sendDataUART1(uint16_t data)
+{
+    USART_SendData(USART1, data);
+    /* Wait till TC is set */
+    // while ((USART1->SR & USART_SR_TC) == 0);
+}
+
+void sendDataUART2(uint16_t data)
+{
+    printf("%c", data);
+    USART_SendData(USART2, data);
+    /* Wait till TC is set */
+    while ((USART2->SR & USART_SR_TC) == 0);
 }
