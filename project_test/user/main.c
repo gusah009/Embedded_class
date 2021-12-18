@@ -57,7 +57,7 @@ volatile int SET_HOUR_MSG_FLAG = 0;
 // MINUTE 설정 문구를 보낼 때 1
 volatile int SET_MIN_MSG_FLAG = 0;
 
-uint8_t presentFace = 'S'; // 초기 표정은 웃는표정 가정
+uint8_t presentFace = 'N'; // 초기
 /*================== Value Check ==================*/
 
 void startPump(){
@@ -73,7 +73,7 @@ uint8_t checkMoisture(uint16_t moisture){
 
     if(moisture > 3000/*임시 토양 습도*/){
         startPump(); // 펌프모터 작동
-        // SaveLog(0,0); // 토양습도 기록
+        SaveLog(1,0); // 토양습도 기록
     }
     else{
         stopPump(); // 모터 중지
@@ -94,34 +94,37 @@ uint8_t checkTemperature(uint16_t temperature){
     uint16_t calcedTemp = temperature; /* 계산된 온도 입력*/
     // printf("temp : %d\n",calcedTemp);
 
-    // if(20/*임시최소온도*/ <= calcedTemp
-    //     && calcedTemp <= 30/*임시최대온도*/ ){
-    if(450 >= calcedTemp){
+    if(440 >= calcedTemp){ // 적정온도 일때
         return 0;
     }
-    return 1;
+    return 1; // 적정온도가 아닐때
 }
 
 void getFace(SensorVal sensorValue){
     uint16_t vibration = sensorValue.vibration;
     uint16_t temperature = sensorValue.temperature;
 
+    printf("temp : %d\n",temperature);
+    printf("vibr : %d\n",vibration);
     if(checkVibration(vibration)){ // 진동 발생여부 확인
-        // SaveLog(0,1); // 진동 감지 로그 남기기
+        SaveLog(0,1); // 진동 감지 로그 남기기
         // LCD_Frown(); // 찌푸린 표정
         if (presentFace != 'F'){
             LCD_Frown(); // 찌푸린 표정
             presentFace = 'F';
         }
     }
-    else if(checkTemperature(temperature)){ // 적정 온도여부 확인
+    else if(440 >= temperature){ // 적정 온도여부 확인
+        // 적정온도가 아닐 때
         // LCD_Sad(); // 슬픈 표정
         if (presentFace != 'D'){
             LCD_Sad(); // 슬픈 표정
+            // LCD_ShowString()
             presentFace = 'D';
         }
     }
     else{
+        // 적정온도 일때
         // LCD_Smile(); // 웃는 표정
         if (presentFace != 'S'){
             LCD_Smile(); // 웃는 표정
@@ -221,6 +224,7 @@ void USART2_IRQHandler()
                             (date[0] == '4' && '0' <= date[1] && date[1] <= '9') ||
                             (date[0] == '5' && '0' <= date[1] && date[1] <= '9')) {
                                 TIME += ((date[0] - '0') * 10 + (date[1] - '0')) * 60;
+                                SET_CLOCK_FLAG = 0;
                                 
                                 // 시간 설정이 끝나면 TIMER 가동
                                 TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
@@ -286,16 +290,15 @@ void USART2_IRQHandler()
 /*================== End Bluetooth ==================*/
 
 /*================== Start Sensor Interrupt ==================*/
+
 void DMA1_Channel1_IRQHandler(void)
 {
     //Test on DMA1 Channel1 Transfer Complete interrupt
     if (DMA_GetITStatus(DMA1_IT_TC1))
     {
-        SensorVal a = getSensorValue();
 
-        getFace(a); // LCD 표정 결정
-        checkMoisture(a.soil_moisture); // 습도확인 및 펌프동작 결정
-
+        
+        
         DMA_ClearITPendingBit(DMA1_IT_TC1 | DMA1_IT_GL1);
         __status++;
     }
@@ -314,6 +317,40 @@ void TIM3_IRQHandler(void)
         // COUNTER가 0.01s마다 1씩 증가하기 때문에 100이 되면 1초 증가시켜주는 부분.
         if (TIM3_COUNTER == 100)
         {
+            SensorVal a = getSensorValue();
+            
+            getFace(a); // LCD 표정 결정
+            checkMoisture(a.soil_moisture); // 습도확인 및 펌프동작 결정
+
+            // double real_temp = (a.temperature * 5 / 1024) * 22 / 2.275; // 센서에서 받은 아날로그값을 voltage로 변환한 다음 온도값으로 변환
+            
+            // uint32_t log_time = TIME;
+            // while(log_time != 5){
+            //     SaveLog(0,0);
+            //     break;
+            // }
+            // // printf("WaterHegiht : %d\n",a.water_height);
+            // if (a.water_height < 300 ){ /*물이 없을 때*/
+            //     sendDataUART2('w'); /*블루투스로 메시지 전송*/ 
+            //     sendDataUART2('a'); 
+            //     sendDataUART2('t'); 
+            //     sendDataUART2('e');  
+            //     sendDataUART2('r');
+            //     sendDataUART2('\n');
+            // }
+            
+            // if (a.vibration > 3500){/*진동이 느껴졌을때*/
+            //     while(log_time < 10){
+            //         if(a.gyro_x < 180){ /*자이로 센서로 화분이 넘어졌는지 체크*/
+            //             sendDataUART2('v'); /*블루투스로 메시지 전송*/
+            //             sendDataUART2('i');
+            //             sendDataUART2('b');
+            //             sendDataUART2('\n');
+            //             break;
+            //         }
+            //     }
+            // }
+
             TIME++;
             TIM3_COUNTER = 0;
         }
