@@ -28,6 +28,78 @@ volatile uint16_t COMMAND_LOG[COMMAND_MAX] = {'l', '\n'};
 volatile int NO_COMMAND_FLAG = 0;
 volatile int SEND_LOG_FLAG = 0;
 
+uint8_t presentFace = 'S'; // 초기 표정은 웃는표정 가정
+/*================== Value Check ==================*/
+
+void startPump(){
+    GPIOE->ODR = (GPIO_ODR_ODR1);// 모터작동
+}
+
+void stopPump(){
+    GPIOE->ODR = 0;// 모터 중지
+}
+
+uint8_t checkMoisture(uint16_t moisture){
+    // printf("Moist : %d\n",moisture);
+
+    if(moisture > 3000/*임시 토양 습도*/){
+        startPump(); // 펌프모터 작동
+        // SaveLog(0,0); // 토양습도 기록
+    }
+    else{
+        stopPump(); // 모터 중지
+    }
+}
+
+uint8_t checkVibration(uint16_t vibration){
+    // printf("Vib : %d\n",vibration);
+
+    if(vibration > 4000/*임시진동기준치*/){
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t checkTemperature(uint16_t temperature){
+
+    uint16_t calcedTemp = temperature; /* 계산된 온도 입력*/
+    // printf("temp : %d\n",calcedTemp);
+
+    // if(20/*임시최소온도*/ <= calcedTemp
+    //     && calcedTemp <= 30/*임시최대온도*/ ){
+    if(450 >= calcedTemp){
+        return 0;
+    }
+    return 1;
+}
+
+void getFace(SensorVal sensorValue){
+    uint16_t vibration = sensorValue.vibration;
+    uint16_t temperature = sensorValue.temperature;
+
+    if(checkVibration(vibration)){ // 진동 발생여부 확인
+        // SaveLog(0,1); // 진동 감지 로그 남기기
+        // LCD_Frown(); // 찌푸린 표정
+        if (presentFace != 'F'){
+            LCD_Frown(); // 찌푸린 표정
+            presentFace = 'F';
+        }
+    }
+    else if(checkTemperature(temperature)){ // 적정 온도여부 확인
+        // LCD_Sad(); // 슬픈 표정
+        if (presentFace != 'D'){
+            LCD_Sad(); // 슬픈 표정
+            presentFace = 'D';
+        }
+    }
+    else{
+        // LCD_Smile(); // 웃는 표정
+        if (presentFace != 'S'){
+            LCD_Smile(); // 웃는 표정
+            presentFace = 'S';
+        }
+    }
+}
 
 /*================== Start Bluetooth ==================*/
 void USART1_IRQHandler()
@@ -109,6 +181,9 @@ void DMA1_Channel1_IRQHandler(void)
     {
         SensorVal a = getSensorValue();
 
+        getFace(a); // LCD 표정 결정
+        checkMoisture(a.soil_moisture); // 습도확인 및 펌프동작 결정
+
         DMA_ClearITPendingBit(DMA1_IT_TC1 | DMA1_IT_GL1);
         __status++;
     }
@@ -168,7 +243,7 @@ int main(void)
     // LCD_DrawRectangle(40, 80, 80, 120);                   // 사각형 출력
     // LCD_ShowString(60, 100, "Button", MAGENTA, WHITE);    // "Button" 글자 출력
 
-    GPIOE->ODR = (GPIO_ODR_ODR1);// 모터 상시 작동
+    // GPIOE->ODR = (GPIO_ODR_ODR1);// 모터 상시 작동
     while (1)
     {
         //  LCD_ShowNum(40, 100, value, 4, BLUE, WHITE);

@@ -636,6 +636,7 @@ void LCD_DrawEyes(){
 }
 
 void LCD_Frown(){
+	LCD_Clear(WHITE);
 	
 	LCD_DrawHead();
 	
@@ -645,6 +646,7 @@ void LCD_Frown(){
 	LCD_DrawLine(FACEX-20,FACEY+10,FACEX+20,FACEY+10); // frown flat mouth
 }
 void LCD_Smile(){
+	LCD_Clear(WHITE);
 
 	LCD_DrawHead();
 	LCD_DrawEyes();
@@ -653,6 +655,7 @@ void LCD_Smile(){
 	LCD_DrawLine(FACEX-10,FACEY+20,FACEX+10,FACEY+20);
 }
 void LCD_Sad(){
+	LCD_Clear(WHITE);
 
 	LCD_DrawHead();
 	LCD_DrawEyes();

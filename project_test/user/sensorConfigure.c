@@ -191,6 +191,8 @@ SensorVal getSensorValue(void)
                                     ADC_values[6 + CHANNEL_NUM * 3]) / 4);
   __status = 0;
   ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+  
+  return sensorVal;
 }
 
 void NVIC_Configure_sensor(void)
