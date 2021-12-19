@@ -45,5 +45,6 @@ void Send_Input_Month_MSG(void);
 void Send_Input_Day_MSG(void);
 void Send_Input_Hour_MSG(void);
 void Send_Input_Minute_MSG(void);
+void Send_Input_Success_MSG(void);
 
 #endif

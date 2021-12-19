@@ -39,8 +39,9 @@ void SaveLog(uint8_t is_pump, uint8_t is_vibrate)
 {
     SensorVal sensorVal = getSensorValue();
     logs[LOG_INDEX].time = TIME;
-    logs[LOG_INDEX].temperature = sensorVal.temperature;
-    logs[LOG_INDEX].soil_moisture = sensorVal.soil_moisture; 
+    logs[LOG_INDEX].temperature = (uint16_t)((sensorVal.temperature * 5.0 / 1024) * 22 / 2.275); // 센서에서 받은 아날로그값을 voltage로 변환한 다음 온도값으로 변환;
+    // mapping 계산식: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    logs[LOG_INDEX].soil_moisture = (uint16_t)(((double)sensorVal.soil_moisture - 5000) * (100 - 0) / (1000 - 5000) + 0) ; 
     logs[LOG_INDEX].is_pump = is_pump;
     logs[LOG_INDEX].is_vibrate = is_vibrate;
 
@@ -187,6 +188,23 @@ void Send_Input_Minute_MSG()
     sendDataUART2('U');
     sendDataUART2('T');
     sendDataUART2('E');
+    sendDataUART2('\n');
+}
+
+void Send_Input_Success_MSG()
+{
+    sendDataUART2('I');
+    sendDataUART2('N');
+    sendDataUART2('I');
+    sendDataUART2('T');
+    sendDataUART2(' ');
+    sendDataUART2('S');
+    sendDataUART2('U');
+    sendDataUART2('C');
+    sendDataUART2('C');
+    sendDataUART2('E');
+    sendDataUART2('S');
+    sendDataUART2('S');
     sendDataUART2('\n');
 }
 void sendDataUART1(uint16_t data)

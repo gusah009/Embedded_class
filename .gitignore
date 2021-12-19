@@ -1,1 +1,3 @@
 *.log
+project_test/Debug/*
+project_test/settings/*
