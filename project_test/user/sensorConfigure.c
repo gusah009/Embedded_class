@@ -138,12 +138,21 @@ void dma_test_adc_CHANNEL_NUM(void)
     return;
 
   uint8_t index;
-  ADC_SoftwareStartConvCmd(ADC1, DISABLE);
-  for (index = 0; index < CHANNEL_NUM; index++)
-  {
-      printf("%d ADC value on ch%d = %d ,%d\r\n",
-              __status, index + 1, (uint16_t)((ADC_values[index] + ADC_values[index + CHANNEL_NUM] + ADC_values[index + CHANNEL_NUM * 2] + ADC_values[index + CHANNEL_NUM * 3]) / 4), ADC_values[index]);
-  }
+  // ADC_SoftwareStartConvCmd(ADC1, DISABLE);
+  // for (index = 0; index < CHANNEL_NUM; index++)
+  // {
+  //     printf("%d ADC value on ch%d = %d ,%d\r\n",
+  //             __status, index + 1, (uint16_t)((ADC_values[index] + ADC_values[index + CHANNEL_NUM] + ADC_values[index + CHANNEL_NUM * 2] + ADC_values[index + CHANNEL_NUM * 3]) / 4), ADC_values[index]);
+  // }
+  printf("%d ADC value on ch%d = %d\r\n",
+          __status, 0 + 1, ADC_values[0] - 3400);
+
+  printf("%d ADC value on ch%d = %d\r\n",
+          __status, 1 + 1, ADC_values[1] - 3400);
+
+  printf("%d ADC value on ch%d = %d\r\n",
+          __status, 2 + 1, ADC_values[2] - 2500);
+  
 __status = 0;
   ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 }

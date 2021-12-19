@@ -82,7 +82,7 @@ void stopPump(){
 uint8_t checkMoisture(uint16_t moisture){
     // printf("Moist : %d\n",moisture);
 
-    if(moisture > 3000/*임시 토양 습도*/){
+    if(moisture > 3000){
         SEND_PUMP_FLAG = 1;
         startPump(); // 펌프모터 작동
         SaveLog(1,0); // 토양습도 기록
@@ -95,7 +95,7 @@ uint8_t checkMoisture(uint16_t moisture){
 uint8_t checkVibration(uint16_t vibration){
     // printf("Vib : %d\n",vibration);
 
-    if(vibration > 4000/*임시진동기준치*/){
+    if(vibration > 4000){
         return 1;
     }
     return 0;
@@ -103,7 +103,7 @@ uint8_t checkVibration(uint16_t vibration){
 
 uint8_t checkTemperature(uint16_t temperature){
 
-    uint16_t calcedTemp = temperature; /* 계산된 온도 입력*/
+    uint16_t calcedTemp = temperature; // 계산된 온도 입력
     // printf("temp : %d\n",calcedTemp);
 
     if(440 >= calcedTemp){ // 적정온도 일때
