@@ -2,6 +2,7 @@
 *.mp4
 *.zip
 *.dep
+*.axf
 *.ewd
 *.ewt
 *.ewp
