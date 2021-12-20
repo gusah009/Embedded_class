@@ -2558,10 +2558,40 @@
             </file>
         </group>
         <file>
+            <name>$PROJ_DIR$\user\bluetoothConfigure.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\bluetoothConfigure.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\user\main.c</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\user\motorConfigure.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\motorConfigure.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\sensorConfigure.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\sensorConfigure.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\user\stm32f10x_it.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\timerConfigure.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\timerConfigure.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\utility.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\user\utility.h</name>
         </file>
     </group>
 </project>
