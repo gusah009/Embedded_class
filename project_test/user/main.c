@@ -126,7 +126,7 @@ void getFace(SensorVal sensorValue){
             presentFace = 'F';
         }
     }
-    else if(32 > temperature){ // 적정 온도여부 확인
+    else if(19 > temperature){ // 적정 온도여부 확인
         // 적정온도가 아닐 때
 
         if (presentFace != 'D'){
@@ -394,8 +394,7 @@ int main(void)
     {
         //  LCD_ShowNum(40, 100, value, 4, BLUE, WHITE);
         // dma_test_adc_CHANNEL_NUM();
-        delay(100000);
-
+      
         if (SET_MONTH_MSG_FLAG) {
             Send_Input_Month_MSG();
             SET_MONTH_MSG_FLAG = 0;
