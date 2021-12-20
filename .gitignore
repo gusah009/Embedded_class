@@ -1,5 +1,10 @@
 *.log
 *.mp4
+*.zip
+*.dep
+*.ewd
+*.ewt
+*.ewp
 project_test/Debug/*
 project_test/settings/*
 .vscode/*
